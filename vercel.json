@@ -1,23 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/api/recommend.py"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/api/recommend.py"
-    },
-    {
       "source": "/api/recommend",
-      "destination": "/api/recommend.py"
-    },
-    {
-      "source": "/css/(.*)",
-      "destination": "/api/recommend.py"
-    },
-    {
-      "source": "/js/(.*)",
       "destination": "/api/recommend.py"
     }
   ]
