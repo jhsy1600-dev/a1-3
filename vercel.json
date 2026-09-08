@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/recommend",
+      "destination": "/api/recommend.py"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ]
+}
