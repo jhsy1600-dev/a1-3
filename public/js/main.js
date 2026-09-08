@@ -154,4 +154,3 @@ document.addEventListener("DOMContentLoaded", () => {
       recommendBtn.textContent = "추천받기";
     }
   });
-});
