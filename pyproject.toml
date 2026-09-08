@@ -1,2 +1,2 @@
 [tool.vercel]
-entrypoint = "API.recommend:app"
+entrypoint = "api.recommend:app"
