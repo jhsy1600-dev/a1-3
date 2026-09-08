@@ -22,72 +22,87 @@ model = genai.GenerativeModel("models/gemini-3.6-flash")
 
 @app.route("/recommend", methods=["POST", "OPTIONS"])
 def recommend_menu():
+    # CORS preflight 요청 처리
     if request.method == "OPTIONS":
         return "", 204
 
-    data = request.get_json()
-
-    print("받은 데이터:", data)
-
-    meal_style = data.get("mealStyle", "")
-    preferred_food = data.get("preferredFood", "")
-    avoid_food = data.get("avoidFood", "")
-
     try:
-        budget = int(data.get("budget", 0))
-    except:
-        budget = 0
+        data = request.get_json()
 
-    prompt = f"""
-너는 사용자의 조건에 맞춰 하루 식단을 추천하는 AI야.
+        # 1. 입력 데이터가 아예 없는 경우
+        if not data:
+            return jsonify({
+                "success": False,
+                "message": "입력 데이터가 없습니다."
+            }), 400
 
-사용자 조건:
-- 원하는 식단 스타일: {meal_style}
-- 좋아하는 음식: {preferred_food}
-- 피하고 싶은 음식: {avoid_food}
-- 예산: {budget}원
+        meal_style = data.get("mealStyle", "").strip()
+        preferred_food = data.get("preferredFood", "").strip()
+        avoid_food = data.get("avoidFood", "").strip()
+        budget = data.get("budget", "").strip()
 
-아침, 점심, 저녁 메뉴를 각각 추천해줘.
+        print("받은 데이터:", data)
 
-반드시 아래 JSON 형식으로만 답변해.
-설명 문장이나 ```json 같은 마크다운은 절대 넣지 마.
+        # 2. 필수 입력값이 비어 있는 경우
+        if not meal_style or not budget:
+            return jsonify({
+                "success": False,
+                "message": "식사 스타일과 예산을 입력해주세요."
+            }), 400
 
-{{
-  "breakfast": {{
-    "menu": "아침 메뉴 이름",
-    "description": "추천 이유",
-    "cost": 예상비용숫자
-  }},
-  "lunch": {{
-    "menu": "점심 메뉴 이름",
-    "description": "추천 이유",
-    "cost": 예상비용숫자
-  }},
-  "dinner": {{
-    "menu": "저녁 메뉴 이름",
-    "description": "추천 이유",
-    "cost": 예상비용숫자
-  }}
-}}
-"""
+        prompt = f"""
+        당신은 식단 추천 전문가입니다.
 
-    try:
-        response = model.generate_content(prompt)
+        사용자 조건:
+        - 식사 스타일: {meal_style}
+        - 선호 음식: {preferred_food}
+        - 피하고 싶은 음식: {avoid_food}
+        - 예산: {budget}원
 
-        ai_text = response.text.strip()
+        아침, 점심, 저녁 식단을 추천해주세요.
 
-        print("Gemini 응답:", ai_text)
+        반드시 아래 형식으로 답변하세요.
 
-        result = json.loads(ai_text)
+        아침
+        메뉴:
+        설명:
+        예상 비용:
 
-        return jsonify(result)
+        점심
+        메뉴:
+        설명:
+        예상 비용:
 
-    except Exception as e:
-        print("오류 발생:", e)
+        저녁
+        메뉴:
+        설명:
+        예상 비용:
+        """
+
+        # 3. Gemini API 호출
+        response = model.generate_content(
+            prompt,
+            request_options={"timeout": 30}
+        )
+
+        # 4. Gemini 응답이 비어 있는 경우
+        if not response.text:
+            return jsonify({
+                "success": False,
+                "message": "추천 결과를 생성하지 못했습니다. 다시 시도해주세요."
+            }), 500
 
         return jsonify({
-            "error": "AI 추천을 생성하는 중 오류가 발생했습니다.",
-            "detail": str(e)
+            "success": True,
+            "recommendation": response.text
+        })
+
+    except Exception as e:
+        print("서버 오류:", e)
+
+        return jsonify({
+            "success": False,
+            "message": "식단 추천 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
         }), 500
 
 
