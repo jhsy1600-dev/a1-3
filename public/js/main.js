@@ -8,15 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultBox = document.getElementById("result");
 
   // Flask/Vercel API 주소
-  // 만약 백엔드 라우트가 /recommend 라면 아래를 "/recommend"로 바꾸세요.
   const API_URL = "/api/recommend";
 
   recommendBtn.addEventListener("click", async () => {
     const mealStyle = mealStyleInput.value.trim();
     const preferredFood = preferredFoodInput.value.trim();
     const avoidFood = avoidFoodInput.value.trim();
-
-    // 중요: Number()로 바꾸기 전에 먼저 빈 값 검사
     const budgetText = budgetInput.value.trim();
 
     // 결과창 초기화
@@ -66,33 +63,26 @@ document.addEventListener("DOMContentLoaded", () => {
     recommendBtn.textContent = "추천받는 중...";
 
     try {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      mealStyle,
-      preferredFood,
-      avoidFood,
-      budget
-    })
-  });
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          mealStyle,
+          preferredFood,
+          avoidFood,
+          budget
+        })
+      });
 
-  if (!response.ok) {
-    throw new Error("서버 응답 오류");
-  }
+      if (!response.ok) {
+        throw new Error("서버 응답 오류");
+      }
 
-  const data = await response.json();
+      const data = await response.json();
 
-  // 결과 출력 코드
-} catch (error) {
-  resultBox.innerHTML = `
-    <p style="color: red;">추천을 가져오는 중 오류가 발생했습니다.</p>
-  `;
-}
-
-      // 7. Gemini가 recommendation 문자열로 보내는 경우
+      // 6. Gemini가 recommendation 문자열로 보내는 경우
       if (data.recommendation) {
         resultBox.innerHTML = `
           <h2>✨ 추천 식단</h2>
@@ -103,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 8. breakfast/lunch/dinner 구조로 보내는 경우
+      // 7. breakfast/lunch/dinner 구조로 보내는 경우
       if (data.breakfast && data.lunch && data.dinner) {
         resultBox.innerHTML = `
           <h2>✨ 추천 식단</h2>
@@ -132,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 9. 예상하지 못한 응답 구조
+      // 8. 예상하지 못한 응답 구조
       resultBox.innerHTML = `
         <p style="color: red;">
           서버 응답 형식이 올바르지 않습니다.
@@ -154,3 +144,4 @@ document.addEventListener("DOMContentLoaded", () => {
       recommendBtn.textContent = "추천받기";
     }
   });
+});
