@@ -66,30 +66,31 @@ document.addEventListener("DOMContentLoaded", () => {
     recommendBtn.textContent = "추천받는 중...";
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          mealStyle,
-          preferredFood,
-          avoidFood,
-          budget
-        })
-      });
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      mealStyle,
+      preferredFood,
+      avoidFood,
+      budget
+    })
+  });
 
-      const data = await response.json();
+  if (!response.ok) {
+    throw new Error("서버 응답 오류");
+  }
 
-      // 6. 서버 에러 처리
-      if (!response.ok || data.success === false) {
-        resultBox.innerHTML = `
-          <p style="color: red;">
-            ${data.message || "추천 중 오류가 발생했습니다."}
-          </p>
-        `;
-        return;
-      }
+  const data = await response.json();
+
+  // 결과 출력 코드
+} catch (error) {
+  resultBox.innerHTML = `
+    <p style="color: red;">추천을 가져오는 중 오류가 발생했습니다.</p>
+  `;
+}
 
       // 7. Gemini가 recommendation 문자열로 보내는 경우
       if (data.recommendation) {
