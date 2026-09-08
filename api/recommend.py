@@ -1,7 +1,7 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
 import json
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -9,6 +9,23 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+@app.route("/", methods=["GET"])
+@app.route("/index.html", methods=["GET"])
+def home():
+    return send_from_directory(BASE_DIR, "index.html")
+
+
+@app.route("/css/<path:filename>", methods=["GET"])
+def css_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "css"), filename)
+
+
+@app.route("/js/<path:filename>", methods=["GET"])
+def js_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "js"), filename)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
