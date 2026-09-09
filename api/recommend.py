@@ -20,8 +20,9 @@ def health_check():
     })
 
 
-@app.route("/", methods=["POST", "OPTIONS"])
-def recommend_menu():
+@app.route("/", methods=["GET", "POST", "OPTIONS"])
+@app.route("/api/recommend", methods=["GET", "POST", "OPTIONS"])
+def recommend():
     if request.method == "OPTIONS":
         return "", 204
 

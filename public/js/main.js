@@ -129,15 +129,16 @@ if (!response.ok) {
         </p>
       `;
 
-    } catch (error) {
-      console.error("요청 오류:", error);
+   } catch (error) {
+    console.error("요청 오류:", error);
 
-      resultBox.innerHTML = `
+    resultBox.innerHTML = `
         <p style="color: red;">
-          서버와 연결할 수 없습니다. Flask 서버가 실행 중인지 확인해주세요.
+            서버 요청 중 오류가 발생했습니다.<br>
+            오류 내용: ${error.message}
         </p>
-      `;
-
+    `;
+    
     } finally {
       loadingText.style.display = "none";
       recommendBtn.disabled = false;
