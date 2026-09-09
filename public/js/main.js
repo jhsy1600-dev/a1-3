@@ -76,11 +76,11 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       });
 
-      if (!response.ok) {
-        throw new Error("서버 응답 오류");
-      }
-
       const data = await response.json();
+
+if (!response.ok) {
+  throw new Error(data.message || "서버 응답 오류");
+}
 
       // 6. Gemini가 recommendation 문자열로 보내는 경우
       if (data.recommendation) {
