@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     recommendBtn.textContent = "추천받는 중...";
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch("/api/recommend", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -138,7 +138,7 @@ if (!response.ok) {
             오류 내용: ${error.message}
         </p>
     `;
-    
+
     } finally {
       loadingText.style.display = "none";
       recommendBtn.disabled = false;
