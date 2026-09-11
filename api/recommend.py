@@ -12,9 +12,9 @@ app = Flask(__name__)
 def health_check():
     return jsonify({
         "status": "ok",
-        "message": "Today Menu AI API is running"
+        "message": "Today Menu AI API is running",
+        "model": "gemini-3.6-flash"
     })
-
 
 @app.route("/api/recommend", methods=["POST"])
 @app.route("/recommend", methods=["POST"])
@@ -85,9 +85,10 @@ def recommend():
 
         # 5. Gemini REST API 호출
         url = (
-            "https://generativelanguage.googleapis.com/v1beta/"
-           "models/gemini-2.5-flash:generateContent"
-            f"?key={api_key}"
+    "https://generativelanguage.googleapis.com/v1beta/"
+    f"models/{"gemini-3.6-flash"}:generateContent"
+    f"?key={api_key}"
+)
         )
 
         payload = {
