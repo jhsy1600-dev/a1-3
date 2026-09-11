@@ -1,56 +1,51 @@
+from flask import Flask, request, jsonify
 import os
 import traceback
-from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
 
 app = Flask(__name__)
 
-@app.route("/")
 @app.route("/api/recommend", methods=["GET", "POST"])
 @app.route("/recommend", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def recommend():
-    if request.method == "GET":
-        return jsonify({
-            "success": True,
-            "message": "Today Menu AI API is running"
-        })
-
     try:
-        api_key = os.environ.get("GEMINI_API_KEY")
-
-        if not api_key:
-            return jsonify({
-                "success": False,
-                "error": "GEMINI_API_KEY 환경변수가 없습니다."
-            }), 500
-
         data = request.get_json(silent=True) or {}
 
-        style = data.get("style", "")
-        preferred = data.get("preferred", "")
+        meal_style = data.get("mealStyle", "")
+        prefer = data.get("prefer", "")
         avoid = data.get("avoid", "")
         budget = data.get("budget", "")
 
-        prompt = f"""
-        하루 식단을 추천해줘.
+        api_key = os.environ.get("GEMINI_API_KEY")
 
-        식사 스타일: {style}
-        선호 음식 또는 재료: {preferred}
+        if not api_key:
+            return jsonify({"error": "GEMINI_API_KEY가 없습니다."}), 500
+
+        client = genai.Client(api_key=api_key)
+
+        prompt = f"""
+        너는 식단 추천 AI야.
+
+        아래 조건에 맞춰 하루 식단을 추천해줘.
+
+        식사 스타일: {meal_style}
+        선호 음식 또는 재료: {prefer}
         피하고 싶은 음식: {avoid}
         하루 예산: {budget}원
 
-        아침, 점심, 저녁으로 나누어 추천하고,
-        간단한 이유도 함께 설명해줘.
+        아침, 점심, 저녁으로 나눠서 추천하고,
+        각 메뉴를 추천한 이유도 짧게 설명해줘.
+        한국어로 답변해줘.
         """
 
-        genai.configure(api_key=api_key)
-
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt
+        )
 
         return jsonify({
-            "success": True,
-            "result": response.text
+            "recommendation": response.text
         })
 
     except Exception as e:
@@ -59,7 +54,6 @@ def recommend():
         print(traceback.format_exc())
 
         return jsonify({
-            "success": False,
-            "error": str(e),
-            "type": type(e).__name__
+            "error": "서버 응답 오류",
+            "detail": str(e)
         }), 500
