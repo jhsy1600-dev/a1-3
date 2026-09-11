@@ -86,7 +86,7 @@ def recommend():
         # 5. Gemini REST API 호출
         url = (
             "https://generativelanguage.googleapis.com/v1beta/"
-            "models//gemini-3.6-flash:generateContent"
+           "models/gemini-2.5-flash:generateContent"
             f"?key={api_key}"
         )
 
