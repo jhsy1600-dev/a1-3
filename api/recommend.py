@@ -1,5 +1,6 @@
 import os
 import traceback
+import requests
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -46,20 +47,7 @@ def recommend():
                 "error": "GEMINI_API_KEY 환경변수가 설정되지 않았습니다."
             }), 500
 
-        # 4. google-genai import
-        # import를 함수 안에서 해야 import 실패도 JSON으로 확인할 수 있습니다.
-        try:
-            from google import genai
-        except Exception as import_error:
-            return jsonify({
-                "error": "google-genai import에 실패했습니다.",
-                "detail": str(import_error)
-            }), 500
-
-        # 5. Gemini 클라이언트 생성
-        client = genai.Client(api_key=api_key)
-
-        # 6. 프롬프트 작성
+        # 4. 프롬프트 작성
         prompt = f"""
 너는 식단 추천 AI야.
 
@@ -95,25 +83,64 @@ def recommend():
 예상 비용:
 """
 
-        # 7. Gemini 호출
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+        # 5. Gemini REST API 호출
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/"
+            "models/gemini-2.0-flash:generateContent"
+            f"?key={api_key}"
         )
 
-        recommendation = response.text
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        }
 
-        # 8. 프론트 main.js가 기대하는 recommendation 형태로 반환
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        gemini_response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+
+        # 6. Gemini API 오류 처리
+        if not gemini_response.ok:
+            return jsonify({
+                "error": "Gemini API 호출에 실패했습니다.",
+                "status_code": gemini_response.status_code,
+                "detail": gemini_response.text
+            }), 500
+
+        gemini_data = gemini_response.json()
+
+        # 7. 응답 텍스트 추출
+        try:
+            recommendation = gemini_data["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception:
+            return jsonify({
+                "error": "Gemini 응답 형식이 예상과 다릅니다.",
+                "detail": gemini_data
+            }), 500
+
+        # 8. 프론트 main.js가 기대하는 형태로 반환
         return jsonify({
             "recommendation": recommendation
         })
 
     except Exception as e:
-        # Vercel 로그에도 찍히게 함
         print("SERVER ERROR")
         print(traceback.format_exc())
 
-        # 브라우저에도 JSON으로 에러 반환
         return jsonify({
             "error": "서버 내부 오류가 발생했습니다.",
             "detail": str(e),
