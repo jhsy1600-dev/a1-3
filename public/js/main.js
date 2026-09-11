@@ -10,6 +10,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Flask/Vercel API 주소
   const API_URL = "/api/recommend";
 
+  // HTML 특수문자 처리 함수
+  // Gemini 응답에 <, > 같은 문자가 있어도 HTML로 실행되지 않게 막아줍니다.
+  function escapeHTML(text) {
+    return String(text)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // 줄바꿈을 <br>로 바꾸는 함수
+  function formatText(text) {
+    return escapeHTML(text).replace(/\n/g, "<br>");
+  }
+
   recommendBtn.addEventListener("click", async () => {
     const mealStyle = mealStyleInput.value.trim();
     const preferredFood = preferredFoodInput.value.trim();
@@ -63,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     recommendBtn.textContent = "추천받는 중...";
 
     try {
-      const response = await fetch("/api/recommend", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -76,68 +92,109 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       });
 
-      const data = await response.json();
+      /*
+        중요:
+        response.json()을 바로 쓰지 않고 response.text()로 먼저 받습니다.
+        이유:
+        서버가 500 에러를 낼 때 JSON이 아닌 일반 텍스트를 보내면
+        response.json()에서 SyntaxError가 발생하기 때문입니다.
+      */
+      const responseText = await response.text();
 
-if (!response.ok) {
-  throw new Error(data.message || "서버 응답 오류");
-}
+      let data = null;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error("JSON 파싱 실패:", jsonError);
+        console.error("서버 원본 응답:", responseText);
+
+        throw new Error(
+          `서버가 JSON이 아닌 응답을 반환했습니다. 응답 내용: ${responseText.slice(0, 200)}`
+        );
+      }
+
+      // 서버 응답이 200번대가 아닐 때
+      if (!response.ok) {
+        throw new Error(
+          data.detail ||
+          data.message ||
+          data.error ||
+          `서버 오류가 발생했습니다. 상태 코드: ${response.status}`
+        );
+      }
 
       // 6. Gemini가 recommendation 문자열로 보내는 경우
       if (data.recommendation) {
         resultBox.innerHTML = `
           <h2>✨ 추천 식단</h2>
           <div class="recommendation">
-            ${data.recommendation.replace(/\n/g, "<br>")}
+            ${formatText(data.recommendation)}
           </div>
         `;
         return;
       }
 
-      // 7. breakfast/lunch/dinner 구조로 보내는 경우
+      // 7. 백엔드가 result 문자열로 보내는 경우
+      // 이전에 작성한 Flask 예시에서는 result로 응답할 수 있습니다.
+      if (data.result) {
+        resultBox.innerHTML = `
+          <h2>✨ 추천 식단</h2>
+          <div class="recommendation">
+            ${formatText(data.result)}
+          </div>
+        `;
+        return;
+      }
+
+      // 8. breakfast/lunch/dinner 구조로 보내는 경우
       if (data.breakfast && data.lunch && data.dinner) {
         resultBox.innerHTML = `
           <h2>✨ 추천 식단</h2>
 
           <div class="menu-card">
             <h3>아침</h3>
-            <p><strong>메뉴:</strong> ${data.breakfast.menu}</p>
-            <p>${data.breakfast.description}</p>
-            <p><strong>예상 비용:</strong> ${data.breakfast.cost}원</p>
+            <p><strong>메뉴:</strong> ${formatText(data.breakfast.menu || "")}</p>
+            <p>${formatText(data.breakfast.description || "")}</p>
+            <p><strong>예상 비용:</strong> ${formatText(data.breakfast.cost || "")}원</p>
           </div>
 
           <div class="menu-card">
             <h3>점심</h3>
-            <p><strong>메뉴:</strong> ${data.lunch.menu}</p>
-            <p>${data.lunch.description}</p>
-            <p><strong>예상 비용:</strong> ${data.lunch.cost}원</p>
+            <p><strong>메뉴:</strong> ${formatText(data.lunch.menu || "")}</p>
+            <p>${formatText(data.lunch.description || "")}</p>
+            <p><strong>예상 비용:</strong> ${formatText(data.lunch.cost || "")}원</p>
           </div>
 
           <div class="menu-card">
             <h3>저녁</h3>
-            <p><strong>메뉴:</strong> ${data.dinner.menu}</p>
-            <p>${data.dinner.description}</p>
-            <p><strong>예상 비용:</strong> ${data.dinner.cost}원</p>
+            <p><strong>메뉴:</strong> ${formatText(data.dinner.menu || "")}</p>
+            <p>${formatText(data.dinner.description || "")}</p>
+            <p><strong>예상 비용:</strong> ${formatText(data.dinner.cost || "")}원</p>
           </div>
         `;
         return;
       }
 
-      // 8. 예상하지 못한 응답 구조
+      // 9. 예상하지 못한 응답 구조
+      console.log("예상하지 못한 서버 응답:", data);
+
       resultBox.innerHTML = `
         <p style="color: red;">
-          서버 응답 형식이 올바르지 않습니다.
+          서버 응답 형식이 올바르지 않습니다.<br>
+          콘솔에서 서버 응답을 확인해주세요.
         </p>
       `;
 
-   } catch (error) {
-    console.error("요청 오류:", error);
+    } catch (error) {
+      console.error("요청 오류:", error);
 
-    resultBox.innerHTML = `
+      resultBox.innerHTML = `
         <p style="color: red;">
-            서버 요청 중 오류가 발생했습니다.<br>
-            오류 내용: ${error.message}
+          서버 요청 중 오류가 발생했습니다.<br>
+          오류 내용: ${formatText(error.message)}
         </p>
-    `;
+      `;
 
     } finally {
       loadingText.style.display = "none";
