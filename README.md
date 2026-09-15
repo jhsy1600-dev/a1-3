@@ -210,30 +210,7 @@ GitHub 저장소 주소는 아래와 같습니다.
 
 ---
 
-## 12. 스크린샷 파일 구성
-
-스크린샷 이미지는 `screenshots` 폴더에 저장했습니다.
-
-```txt
-screenshots/
-├─ desktop-main.png
-├─ mobile-main.png
-├─ ai-result.png
-└─ ai-coding-tool.png
-```
-
-각 이미지 설명은 다음과 같습니다.
-
-| 파일명 | 설명 |
-|---|---|
-| desktop-main.png | 데스크톱 화면 |
-| mobile-main.png | 모바일 반응형 화면 |
-| ai-result.png | AI 식단 추천 결과 화면 |
-| ai-coding-tool.png | AI 코딩 도구 사용 과정 증빙 |
-
----
-
-## 13. AI 코딩 도구 사용 내역
+## 12. AI 코딩 도구 사용 내역
 
 프로젝트 개발 과정에서 AI 코딩 도구를 활용하여 다음 작업에 도움을 받았습니다.
 
@@ -248,10 +225,3 @@ AI 코딩 도구는 오류 원인을 파악하고 해결 방향을 찾는 데 �
 
 ---
 
-## 14. 프로젝트를 진행하며 배운 점
-
-이번 프로젝트를 통해 AI API를 웹 서비스에 연동하는 방법을 배웠습니다.
-
-또한 환경 변수를 사용하여 API Key를 안전하게 관리하는 방법, Vercel을 이용해 웹 서비스를 배포하는 방법, 그리고 사용자의 입력을 서버로 전달하고 AI 응답을 화면에 출력하는 전체 흐름을 이해할 수 있었습니다.
-   ├─ ai-result.png
-   └─ ai-coding-tool.png
